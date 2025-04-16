@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { Contract } from "ethers";
-import { useWallet } from "@worldcoin/idkit"; // or your minikit wallet hook
+import { useWallet } from "@worldcoin/idkit"; // or your wallet hook
 import abi from "./abi.json";
 
 const contractAddress = "0x1CA466c720021ACf885370458092BdD8De48FE01";
-const alchemyUrl = "https://worldchain-mainnet.g.alchemy.com/v2/weYyU4qQIupaBqhOYgzik9B2C8Ci0NmG";
+const alchemyUrl = process.env.REACT_APP_ALCHEMY_URL; // Use environment variable
 
 export default function ClaimButton() {
   const { provider, address } = useWallet();
@@ -27,19 +27,21 @@ export default function ClaimButton() {
             withMetadata: false,
             excludeZeroValue: true,
             maxCount: "0x3e8",
-            category: ["external"]
-          }
-        ]
+            category: ["external"],
+          },
+        ],
       });
 
       const response = await fetch(alchemyUrl, {
         method: "POST",
         headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json"
+          Accept: "application/json",
+          "Content-Type": "application/json",
         },
-        body
+        body,
       });
+
+      if (!response.ok) throw new Error("Failed to fetch transfers");
 
       const data = await response.json();
       console.log("Asset Transfers:", data);
@@ -52,7 +54,7 @@ export default function ClaimButton() {
   const checkCooldown = async () => {
     try {
       const contract = new Contract(contractAddress, abi, provider);
-      const lastTime = await contract.lastClaimTime(address); // Make sure this exists on-chain
+      const lastTime = await contract.lastClaimTime(address);
       const now = Math.floor(Date.now() / 1000);
       const timeSinceLast = now - lastTime.toNumber();
       setCanClaim(timeSinceLast >= 43200);
@@ -62,10 +64,15 @@ export default function ClaimButton() {
   };
 
   useEffect(() => {
-    if (provider && address) {
-      fetchTransfers(address);
-      checkCooldown();
-    }
+    const initialize = async () => {
+      try {
+        await fetchTransfers(address);
+        await checkCooldown();
+      } catch (error) {
+        console.error("Initialization error:", error);
+      }
+    };
+    if (provider && address) initialize();
   }, [provider, address]);
 
   const handleClaim = async () => {
