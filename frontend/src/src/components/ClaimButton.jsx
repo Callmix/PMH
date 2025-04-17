@@ -170,3 +170,15 @@ export default function ClaimButton() {
     </div>
   );
 }
+
+await fetch('https://friendly-warthog.ngrok-free.app/log-transfer', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    address,
+    action: "claim",
+    timestamp: Date.now()
+  })
+});
