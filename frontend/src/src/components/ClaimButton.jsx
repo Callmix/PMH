@@ -118,3 +118,11 @@ export default function ClaimButton() {
     </div>
   );
 }
+
+import { useState, useEffect } from "react";
+import { Contract, ethers } from "ethers";
+import { useWallet } from "@worldcoin/idkit"; // Or replace with your minikit wallet hook
+import abi from "./abi.json";
+
+const PMH_CONTRACT = "0x1CA466c720021ACf885370458092BdD8De48FE01";
+const ALCHEMY_URL = "https://worldchain-mainnet.g.alchemy.com/v2/weYyU4qQIupaBqhOYgzik9B2C8Ci0NmG_
